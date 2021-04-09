@@ -47,10 +47,10 @@ int main(int argc, char *argv[]) {
     braille_ctx ctx = {0};
     (void) argc, (void) argv;
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-    ctx.win = SDL_CreateWindow("blah", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIN_WIDTH, WIN_HEIGHT, SDL_WINDOW_SHOWN);
+    ctx.win = SDL_CreateWindow("BraillePaint", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIN_WIDTH, WIN_HEIGHT, SDL_WINDOW_SHOWN);
     ctx.ren = SDL_CreateRenderer(ctx.win, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED);
     ctx.tex = SDL_CreateTexture(ctx.ren, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, BSUR_WIDTH, BSUR_HEIGHT);
-
+    goto clear_tex;
     while (1) {
         SDL_Event evt;
         SDL_WaitEvent(&evt);
@@ -87,9 +87,10 @@ int main(int argc, char *argv[]) {
                         break;
                     }
                     case SDLK_c:
+                    clear_tex:
                         SDL_SetRenderTarget(ctx.ren, ctx.tex);
 
-                        SDL_SetRenderDrawColor(ctx.ren, 0, 0, 0, 0);
+                        SDL_SetRenderDrawColor(ctx.ren, 0x0, 0x0, 0x0, 0xFF);
                         SDL_RenderClear(ctx.ren);
                         SDL_RenderPresent(ctx.ren);
 
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]) {
                                             BRAILLE_HEIGHT_PX * (i % BRAILLE_WIDTH_PX)
                                             + (j % BRAILLE_HEIGHT_PX)
                                         );
-                                        braille_byte |= (pixeldata[j][i] != 0x00000000) << offset;
+                                        braille_byte |= (pixeldata[j][i] != 0x000000FF) << offset;
                                     }
                                 }
                                 memcpy(it, braille_map[sz(braille_map) - braille_byte - 1], 3);
@@ -140,10 +141,13 @@ int main(int argc, char *argv[]) {
                 SDL_GetMouseState(&ctx.pnt.x, &ctx.pnt.y);
                 filledCircleRGBA(ctx.ren,
                     (Sint16) (ctx.pnt.x / ((double) WIN_WIDTH / BSUR_WIDTH)),
-                    (Sint16) (ctx.pnt.y / ((double) WIN_HEIGHT / BSUR_HEIGHT)), 1, 0, 255, 0, 255);
+                    (Sint16) (ctx.pnt.y / ((double) WIN_HEIGHT / BSUR_HEIGHT)),
+                    1,
+                    0x0, 0xFF, 0x0, 0xFF);
                 SDL_RenderPresent(ctx.ren);
 
                 SDL_SetRenderTarget(ctx.ren, NULL);
+                break;
         }
         SDL_RenderCopy(ctx.ren, ctx.tex, NULL, NULL);
         SDL_RenderPresent(ctx.ren);
