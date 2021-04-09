@@ -60,6 +60,20 @@ int main(int argc, char *argv[]) {
                 goto quit;
             case SDL_KEYDOWN:
                 switch (evt.key.keysym.sym) {
+                    case SDLK_UP:
+                    case SDLK_DOWN:
+                    case SDLK_RIGHT:
+                    case SDLK_LEFT: {
+                        #define KB_SPEED 5
+                        const Uint8 *st = SDL_GetKeyboardState(NULL);
+                        SDL_GetMouseState(&ctx.pnt.x, &ctx.pnt.y);
+                        if(st[SDL_SCANCODE_UP]) ctx.pnt.y -= KB_SPEED;
+                        if(st[SDL_SCANCODE_DOWN]) ctx.pnt.y += KB_SPEED;
+                        if(st[SDL_SCANCODE_RIGHT]) ctx.pnt.x += KB_SPEED;
+                        if(st[SDL_SCANCODE_LEFT]) ctx.pnt.x -= KB_SPEED;
+                        SDL_WarpMouseInWindow(ctx.win, ctx.pnt.x, ctx.pnt.y);
+                        break;
+                    }
                     case SDLK_l: {
                         SDL_Surface *sur = SDL_LoadBMP("file.bmp");
                         SDL_Texture *tex = SDL_CreateTextureFromSurface(ctx.ren, sur);
@@ -98,7 +112,7 @@ int main(int argc, char *argv[]) {
                                         braille_byte |= (pixeldata[j][i] == 0x00FF00FF) << offset;
                                     }
                                 }
-                                memcpy(it, braille_map[sizeof(braille_map) - braille_byte - 1], 3);
+                                memcpy(it, braille_map[sz(braille_map) - braille_byte - 1], 3);
                                 it += 3;
                             }
                             *it++ = '\n';
