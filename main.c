@@ -39,6 +39,8 @@ static const char *const braille_map[256] = {
 #define BSUR_W  64
 #define BSUR_H  128
 
+#define BRUSH_COLOR 0xFF, 0xFF, 0xFF, 0xFF
+
 #if BSUR_W % BRAILLE_W_PX != 0
     #error "Surface width must be a multiple of 2"
 #endif
@@ -91,6 +93,26 @@ int main(int argc, char *argv[]) {
                         if (st[SDL_SCANCODE_RIGHT]) ctx.pnt.x += KB_SPEED;
                         if (st[SDL_SCANCODE_LEFT]) ctx.pnt.x -= KB_SPEED;
                         SDL_WarpMouseInWindow(ctx.win, ctx.pnt.x, ctx.pnt.y);
+                        break;
+                    }
+                    case SDLK_i: {
+                        SDL_SetRenderTarget(ctx.ren, ctx.tex);
+
+                        SDL_RenderReadPixels(ctx.ren, NULL, SDL_PIXELFORMAT_RGBA8888,
+                            pixeldata, BSUR_W * sizeof(Uint32));
+                        for (int y = 0; y < BSUR_H; ++y) {
+                            for (int x = 0; x < BSUR_W; ++x) {
+                                Uint32 col = pixeldata[y][x];
+                                Uint8 r, g, b, a;
+                                r = (col & 0xFF000000) >> 24;
+                                g = (col & 0x00FF0000) >> 16;
+                                b = (col & 0x0000FF00) >> 8;
+                                a = (col & 0x000000FF);
+                                SDL_SetRenderDrawColor(ctx.ren, ~r, ~g, ~b, a);
+                                SDL_RenderDrawPoint(ctx.ren, x, y);
+                            }
+                        }
+                        SDL_RenderPresent(ctx.ren);
                         break;
                     }
                     case SDLK_l: {
@@ -156,7 +178,7 @@ int main(int argc, char *argv[]) {
                     (Sint16) (ctx.pnt.x / ((double) WIN_W / BSUR_W)),
                     (Sint16) (ctx.pnt.y / ((double) WIN_H / BSUR_H)),
                     1,
-                    0x0, 0xFF, 0x0, 0xFF);
+                    BRUSH_COLOR);
                 SDL_RenderPresent(ctx.ren);
                 break;
         } /* switch evt.type */
