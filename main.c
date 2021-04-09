@@ -49,8 +49,7 @@ int main(int argc, char *argv[]) {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     ctx.win = SDL_CreateWindow("blah", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIN_WIDTH, WIN_HEIGHT, SDL_WINDOW_SHOWN);
     ctx.ren = SDL_CreateRenderer(ctx.win, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED);
-    ctx.tex = SDL_CreateTexture(ctx
-        .ren, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, BSUR_WIDTH, BSUR_HEIGHT);
+    ctx.tex = SDL_CreateTexture(ctx.ren, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, BSUR_WIDTH, BSUR_HEIGHT);
 
     while (1) {
         SDL_Event evt;
@@ -67,15 +66,16 @@ int main(int argc, char *argv[]) {
                         #define KB_SPEED 5
                         const Uint8 *st = SDL_GetKeyboardState(NULL);
                         SDL_GetMouseState(&ctx.pnt.x, &ctx.pnt.y);
-                        if(st[SDL_SCANCODE_UP]) ctx.pnt.y -= KB_SPEED;
-                        if(st[SDL_SCANCODE_DOWN]) ctx.pnt.y += KB_SPEED;
-                        if(st[SDL_SCANCODE_RIGHT]) ctx.pnt.x += KB_SPEED;
-                        if(st[SDL_SCANCODE_LEFT]) ctx.pnt.x -= KB_SPEED;
+                        if (st[SDL_SCANCODE_UP]) ctx.pnt.y -= KB_SPEED;
+                        if (st[SDL_SCANCODE_DOWN]) ctx.pnt.y += KB_SPEED;
+                        if (st[SDL_SCANCODE_RIGHT]) ctx.pnt.x += KB_SPEED;
+                        if (st[SDL_SCANCODE_LEFT]) ctx.pnt.x -= KB_SPEED;
                         SDL_WarpMouseInWindow(ctx.win, ctx.pnt.x, ctx.pnt.y);
                         break;
                     }
                     case SDLK_l: {
                         SDL_Surface *sur = SDL_LoadBMP("file.bmp");
+                        if (!sur) break;
                         SDL_Texture *tex = SDL_CreateTextureFromSurface(ctx.ren, sur);
 
                         SDL_SetRenderTarget(ctx.ren, ctx.tex);
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
                     case SDLK_c:
                         SDL_SetRenderTarget(ctx.ren, ctx.tex);
 
-                        SDL_SetRenderDrawColor(ctx.ren, 0, 0, 0, 255);
+                        SDL_SetRenderDrawColor(ctx.ren, 0, 0, 0, 0);
                         SDL_RenderClear(ctx.ren);
                         SDL_RenderPresent(ctx.ren);
 
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
                                             BRAILLE_HEIGHT_PX * (i % BRAILLE_WIDTH_PX)
                                             + (j % BRAILLE_HEIGHT_PX)
                                         );
-                                        braille_byte |= (pixeldata[j][i] == 0x00FF00FF) << offset;
+                                        braille_byte |= (pixeldata[j][i] != 0x00000000) << offset;
                                     }
                                 }
                                 memcpy(it, braille_map[sz(braille_map) - braille_byte - 1], 3);
