@@ -23,7 +23,7 @@
 #endif
 
 
-#define BRUSH_COLOR 0xFF, 0xFF, 0xFF, 0xFF
+#define BRUSH_COLOR 0xFFu, 0xFFu, 0xFFu, 0xFFu
 
 static inline uint32_t toRGBA32(uint8_t r, uint8_t g, uint8_t b, uint8_t a){
     uint8_t arr[4] = {r, g, b, a};

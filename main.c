@@ -23,15 +23,12 @@ typedef struct braille_ctx {
 static char generated_text[(BSUR_W * BSUR_H) / (BRAILLE_H_PX * BRAILLE_W_PX) * sizeof(*braille_map) + BSUR_H + 1] = {0};
 #define IS_LMB(x) ((x) & SDL_BUTTON_LMASK)
 
-struct RGBA {
-    Uint8 r, g, b, a;
-};
 
 static uint32_t pixeldata[BSUR_H][BSUR_W];
 
 void clear_texture(const braille_ctx *ctx) {
     SDL_SetRenderTarget(ctx->ren, ctx->tex);
-    SDL_SetRenderDrawColor(ctx->ren, 0x0, 0x0, 0x0, 0xFF);
+    SDL_SetRenderDrawColor(ctx->ren, 0x0u, 0x0u, 0x0u, 0xFFu);
     SDL_RenderClear(ctx->ren);
 }
 
@@ -51,9 +48,9 @@ int load_into_texture(const char *path, SDL_Renderer *ren, SDL_Texture *tex) {
 
 uint32_t find_closest_b_and_w(Uint8 r, Uint8 g, Uint8 b) {
     if ((sqrt(pow2(r) * .241 + pow2(g) * .691 + pow2(b) * .068) > 130)) {
-        return toRGBA32(255, 255, 255, 255);
+        return toRGBA32(0xFFu, 0xFFu, 0xFFu, 0xFFu);
     } else {
-        return toRGBA32(0, 0, 0, 255);
+        return toRGBA32(0x0u, 0x0u, 0x0u, 0xFFu);
     }
 }
 
@@ -119,8 +116,10 @@ int main(int argc, char *argv[]) {
 
                             for (int y = 0; y < BSUR_H; y++) {
                                 for (int x = 0; x < BSUR_W; x++) {
-                                    struct RGBA col = *(struct RGBA *)&pixeldata[y][x];
-                                    SDL_SetRenderDrawColor(ctx.ren, ~col.r, ~col.g, ~col.b, col.a);
+
+                                    uint8_t *col = (uint8_t *) &pixeldata[y][x];
+
+                                    SDL_SetRenderDrawColor(ctx.ren, ~col[0], ~col[1], ~col[2], col[3]);
                                     SDL_RenderDrawPoint(ctx.ren, x, y);
                                 }
                             }
@@ -132,7 +131,7 @@ int main(int argc, char *argv[]) {
                             SDL_RenderReadPixels(ctx.ren, NULL, SDL_PIXELFORMAT_RGBA32,
                                 pixeldata, BSUR_W * sizeof(**pixeldata));
 
-                            tobilevel(pixeldata, pixeldata, BSUR_W, BSUR_H);
+                            tobilevel((uint32_t *) pixeldata, (const uint32_t *) pixeldata, BSUR_W, BSUR_H);
 
                             SDL_Texture *tex = SDL_CreateTextureFromSurface(ctx
                                 .ren,    SDL_CreateRGBSurfaceWithFormatFrom(pixeldata, BSUR_W, BSUR_H, 32, BSUR_W * sizeof(**pixeldata), SDL_PIXELFORMAT_RGBA32)
@@ -151,10 +150,12 @@ int main(int argc, char *argv[]) {
 
                             for (int y = 0; y < BSUR_H; y++) {
                                 for (int x = 0; x < BSUR_W; x++) {
-                                    const struct RGBA col = *(const struct RGBA *) &pixeldata[y][x];
-                                    uint32_t res = find_closest_b_and_w(col.r, col.g, col.b);
-                                    const struct RGBA newcol = *(const struct RGBA *)&res;
-                                    SDL_SetRenderDrawColor(ctx.ren, newcol.r, newcol.g, newcol.b, newcol.a);
+                                    uint32_t res;
+                                    uint8_t *col = (uint8_t *) &pixeldata[y][x];
+                                    uint8_t *newcol = (uint8_t *) &res;
+                                    res = find_closest_b_and_w(col[0], col[1], col[2]);
+
+                                    SDL_SetRenderDrawColor(ctx.ren, newcol[0], newcol[1], newcol[2], newcol[3]);
                                     SDL_RenderDrawPoint(ctx.ren, x, y);
                                 }
                             }
@@ -169,7 +170,7 @@ int main(int argc, char *argv[]) {
                             char *it = generated_text;
                             for (int y = 0; y < BSUR_H; y += BRAILLE_H_PX) {
                                 for (int x = 0; x < BSUR_W; x += BRAILLE_W_PX) {
-                                    #define p(pd) ((pd) == toRGBA32(0, 0, 0, 255))
+                                    #define p(pd) (uint8_t)((pd) == toRGBA32(0x0u, 0x0u, 0x0u, 0xFFu))
                                     Uint8 braille_byte = 0;
                                     braille_byte |= p(pixeldata[y + 0][x + 0]) << 0;
                                     braille_byte |= p(pixeldata[y + 1][x + 0]) << 1;
