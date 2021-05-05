@@ -1,8 +1,15 @@
 {
   "name": "braille-paint",
-  "version-string": "0.0.1",
+  "version-string": "0.0.2",
   "dependencies": [
     "sdl2",
-    "sdl2-gfx"
+    "sdl2-gfx",
+    {
+      "name": "sdl2-image",
+      "features": [
+        "libjpeg-turbo",
+        "libwebp"
+      ]
+    }
   ]
 }
