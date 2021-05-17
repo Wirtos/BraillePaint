@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <math.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
-#include <SDL2/SDL_image.h>
+#include <SDL.h>
+#include <SDL2_gfxPrimitives.h>
+#include <SDL_image.h>
 #include <sfd.h>
 
 typedef struct braille_ctx {
@@ -47,7 +47,7 @@ int load_into_texture(const char *path, SDL_Renderer *ren, SDL_Texture *tex) {
 #define pow2(x) ((x) * (x))
 
 uint32_t find_closest_b_and_w(Uint8 r, Uint8 g, Uint8 b) {
-    if ((sqrt(pow2(r) * .241 + pow2(g) * .691 + pow2(b) * .068) > 130)) {
+    if ((sqrt(pow2(r) * .241 + pow2(g) * .691 + pow2(b) * .068) > 128)) {
         return toRGBA32(0xFFu, 0xFFu, 0xFFu, 0xFFu);
     } else {
         return toRGBA32(0x0u, 0x0u, 0x0u, 0xFFu);
