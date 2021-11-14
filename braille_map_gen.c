@@ -2,12 +2,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-uint8_t b2br(uint8_t i) {
-    /* save bits 4, 7, 6, 5 as bin 04765000 */
-    uint8_t tmp = ((i & (0x1u << 3)) << 3) | ((i & (0x7u << 4)) >> 1);
-    i &= ~(0xFu << 3); /* clear bits 7, 6, 5, 4 */
-    i |= tmp; /* copy bits 4, 7, 6, 5 into 7, 6, 5, 4 */
-    return i;
+static uint8_t b2br(uint8_t i) {
+    /* shuffle bit to align them as 7 3 6 5 4 2 1 0 */
+    return (i & 0x87u)
+        | ((i & 0x08u) << 3)
+        | ((i & 0x70u) >> 1);
 }
 
 #define fw(s, fp) fwrite(s, 1, sizeof(s) - 1, fp)
