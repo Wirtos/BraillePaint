@@ -4,6 +4,9 @@
 #include <SDL2_gfxPrimitives.h>
 #include <SDL_image.h>
 #include <sfd.h>
+#include <bilevel_cvt.h>
+#include "braille_map.h"
+#include "config.h"
 
 typedef struct braille_ctx {
     SDL_Texture *tex;
@@ -12,10 +15,6 @@ typedef struct braille_ctx {
     SDL_Point pnt;
     short brush_rad;
 } braille_ctx;
-
-#include "config.h"
-#include <braille_map.h>
-#include <bilevel_cvt.h>
 
 #define sz(arr) (sizeof(arr) / sizeof(*(arr)))
 
@@ -140,7 +139,7 @@ int main(int argc, char *argv[]) {
                             SDL_RenderReadPixels(ctx.ren, NULL, SDL_PIXELFORMAT_RGBA32,
                                 pixeldata, BSUR_W * sizeof(**pixeldata));
 
-                            tobilevel((uint32_t *) pixeldata, (const uint32_t *) pixeldata, BSUR_W, BSUR_H);
+                            bilevel_cvt((uint32_t *) pixeldata, (uint32_t *) pixeldata, BSUR_W, BSUR_H);
 
                             SDL_Texture *tex = SDL_CreateTextureFromSurface(ctx
                                 .ren, SDL_CreateRGBSurfaceWithFormatFrom(pixeldata, BSUR_W, BSUR_H, 32,
@@ -286,5 +285,6 @@ int main(int argc, char *argv[]) {
         SDL_Delay(0);
     }
     quit:
+    SDL_Quit();
     return EXIT_SUCCESS;
 }

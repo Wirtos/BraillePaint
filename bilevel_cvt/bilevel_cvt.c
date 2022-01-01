@@ -1,5 +1,4 @@
 #include "bilevel_cvt.h"
-#include "config.h" /* toRGBA32 */
 #include <stdlib.h>
 
 
@@ -19,7 +18,7 @@
                 : 255     \
    )
 
-int tobilevel(uint32_t *imOut, const uint32_t *imIn, int xsize, int ysize) {
+int bilevel_cvt(uint32_t *imOut, const uint32_t *imIn, int xsize, int ysize) {
     int *errors;
 
     errors = calloc(xsize + 1, sizeof(*errors));
