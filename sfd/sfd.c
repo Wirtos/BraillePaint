@@ -257,6 +257,7 @@ static const char* file_dialog(sfd_Options *opt, int save) {
     return result_buf;
   }
 
+  last_error = "Cancelled by user";
   return NULL;
 }
 

@@ -3,12 +3,17 @@
   "version-string": "0.0.2",
   "dependencies": [
     "sdl2",
+    {
+      "name": "sdl2",
+      "default-features": false,
+      "features": ["x11"],
+      "platform": "linux"
+    },
     "sdl2-gfx",
     {
       "name": "sdl2-image",
       "features": [
-        "libjpeg-turbo",
-        "libwebp"
+        "libjpeg-turbo"
       ]
     }
   ]

@@ -58,12 +58,13 @@ uint32_t find_closest_b_and_w(Uint8 r, Uint8 g, Uint8 b) {
 }
 
 int main(int argc, char *argv[]) {
+    const int img_flags = IMG_INIT_JPG | IMG_INIT_PNG;
     braille_ctx ctx = {.brush_rad = 1};
     (void) argc, (void) argv;
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         critical_error();
     }
-    if (IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) != 0) {
+    if ((IMG_Init(img_flags) & img_flags) != img_flags) {
         critical_error();
     }
     ctx.win = SDL_CreateWindow("BraillePaint",
