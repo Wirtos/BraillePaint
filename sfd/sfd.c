@@ -133,12 +133,31 @@ static void init_ofn(OPENFILENAME *ofn, sfd_Options *opt) {
     ofn->lpstrDefExt = opt->extension;
 }
 
+static const char *CommDlgExtendedErrorStr(void){
+    DWORD err = CommDlgExtendedError();
+    switch (err) {
+        case FALSE:
+            return "Cancelled by user";
+        case FNERR_BUFFERTOOSMALL:
+            return "Buffer too small";
+        case FNERR_INVALIDFILENAME:
+            return "A file name is invalid";
+        case FNERR_SUBCLASSFAILURE:
+            return "Not enough memory";
+        default:
+            return "Unknown error";
+    }
+}
+
 const char *sfd_open_dialog(sfd_Options *opt) {
     int ok;
     OPENFILENAME ofn;
     last_error = NULL;
     init_ofn(&ofn, opt);
     ok = GetOpenFileName(&ofn);
+    if(!ok){
+        last_error = CommDlgExtendedErrorStr();
+    }
     return ok ? ofn.lpstrFile : NULL;
 }
 
@@ -148,6 +167,9 @@ const char *sfd_save_dialog(sfd_Options *opt) {
     last_error = NULL;
     init_ofn(&ofn, opt);
     ok = GetSaveFileName(&ofn);
+    if (!ok){
+        last_error = CommDlgExtendedErrorStr();
+    }
     return ok ? ofn.lpstrFile : NULL;
 }
 

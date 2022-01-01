@@ -19,12 +19,15 @@ typedef struct braille_ctx {
 
 #define sz(arr) (sizeof(arr) / sizeof(*(arr)))
 
-
 static char generated_text[(BSUR_W * BSUR_H) / (BRAILLE_H_PX * BRAILLE_W_PX) * sizeof(*braille_map) + BSUR_H + 1] = {0};
 #define IS_LMB(x) ((x) & SDL_BUTTON_LMASK)
 
-
 static uint32_t pixeldata[BSUR_H][BSUR_W];
+
+static void critical_error(void) {
+    puts(SDL_GetError());
+    abort();
+}
 
 void clear_texture(const braille_ctx *ctx) {
     SDL_SetRenderTarget(ctx->ren, ctx->tex);
@@ -34,7 +37,7 @@ void clear_texture(const braille_ctx *ctx) {
 
 int load_into_texture(const char *path, SDL_Renderer *ren, SDL_Texture *tex) {
     SDL_Texture *itex = IMG_LoadTexture(ren, path);
-    if (!itex) {
+    if (itex == NULL) {
         puts(IMG_GetError());
         return 0;
     }
@@ -57,14 +60,29 @@ uint32_t find_closest_b_and_w(Uint8 r, Uint8 g, Uint8 b) {
 int main(int argc, char *argv[]) {
     braille_ctx ctx = {.brush_rad = 1};
     (void) argc, (void) argv;
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-    if (IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) < 0) puts(IMG_GetError());
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
+        critical_error();
+    }
+    if (IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) != 0) {
+        critical_error();
+    }
     ctx.win = SDL_CreateWindow("BraillePaint",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         WIN_W, WIN_H,
         SDL_WINDOW_SHOWN);
+    if (ctx.win == NULL) {
+        critical_error();
+    }
+
     ctx.ren = SDL_CreateRenderer(ctx.win, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED);
+    if (ctx.ren == NULL) {
+        critical_error();
+    }
+
     ctx.tex = SDL_CreateTexture(ctx.ren, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, BSUR_W, BSUR_H);
+    if (ctx.tex == NULL) {
+        critical_error();
+    }
     clear_texture(&ctx);
 
     while (1) {
@@ -90,16 +108,6 @@ int main(int argc, char *argv[]) {
                         case SDLK_MINUS:
                             if (ctx.brush_rad > 0) ctx.brush_rad--;
                             break;
-                        case SDLK_l: {
-                            const char *path = sfd_open_dialog(&(sfd_Options) {
-                                .title        = "Import Image File",
-                                .filter_name  = "Image File",
-                                .filter       = "*.bmp|*.png|*.jpg",
-                            });
-                            if (!path) break;
-                            load_into_texture(path, ctx.ren, ctx.tex);
-                            break;
-                        }
                         case SDLK_c:
                             clear_texture(&ctx);
                             break;
@@ -134,7 +142,8 @@ int main(int argc, char *argv[]) {
                             tobilevel((uint32_t *) pixeldata, (const uint32_t *) pixeldata, BSUR_W, BSUR_H);
 
                             SDL_Texture *tex = SDL_CreateTextureFromSurface(ctx
-                                .ren,    SDL_CreateRGBSurfaceWithFormatFrom(pixeldata, BSUR_W, BSUR_H, 32, BSUR_W * sizeof(**pixeldata), SDL_PIXELFORMAT_RGBA32)
+                                .ren, SDL_CreateRGBSurfaceWithFormatFrom(pixeldata, BSUR_W, BSUR_H, 32,
+                                BSUR_W * sizeof(**pixeldata), SDL_PIXELFORMAT_RGBA32)
                             );
                             SDL_SetRenderTarget(ctx.ren, ctx.tex);
                             SDL_RenderCopy(ctx.ren, tex, NULL, NULL);
@@ -162,7 +171,37 @@ int main(int argc, char *argv[]) {
                             SDL_RenderPresent(ctx.ren);
                             break;
 
+                        case SDLK_l: {
+                            const char *path = sfd_open_dialog(&(sfd_Options) {
+                                .title        = "Import Image File",
+                                .filter_name  = "Image File",
+                                .filter       = "*.bmp|*.png|*.jpg",
+                            });
+                            if (path == NULL) {
+                                puts(sfd_get_error());
+                                break;
+                            }
+                            load_into_texture(path, ctx.ren, ctx.tex);
+                            break;
+                        }
+
                         case SDLK_s: {
+                            FILE *fp;
+                            const char *path = sfd_save_dialog(&(sfd_Options) {
+                                .title        = "Save As Text File",
+                                .filter_name  = "Normal text file (*.txt)",
+                                .filter       = "*.txt",
+                                .extension    = "txt"
+                            });
+                            if (path == NULL) {
+                                puts(sfd_get_error());
+                                break;
+                            }
+                            fp = fopen(path, "w");
+                            if (fp == NULL) {
+                                perror("Can't open file for writing");
+                                break;
+                            }
                             SDL_SetRenderTarget(ctx.ren, ctx.tex);
 
                             SDL_RenderReadPixels(ctx.ren, NULL, SDL_PIXELFORMAT_RGBA32,
@@ -187,7 +226,9 @@ int main(int argc, char *argv[]) {
                                 *it++ = '\n';
                             }
                             *it = '\0';
-                            SDL_SetClipboardText(generated_text);
+                            // SDL_SetClipboardText(generated_text);
+                            fputs(generated_text, fp);
+                            fclose(fp);
                             break;
                         }
                     }
